@@ -2,7 +2,7 @@ image: ubuntu
 
 init:
 - sudo apt -y install libpulse-dev # pulseaudio-utils
-
+- sudo apt -y install libsdl2-dev # for examples
 
 build_script:
 - ./scripts/ubuntu.build.sh
