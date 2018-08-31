@@ -74,30 +74,20 @@ public:
             return "wait() failed";
         }
 
-        PulseLocker locker(mainLoop);
-        auto op = pa_context_get_sink_info_list(context_, [=](pa_context *, const pa_sink_info *info, int eol,void *userdata) -> void {
-            if (eol == 0 && info->monitor_source != PA_INVALID_INDEX) {
-                ((PulseImpl *)userdata)->monitor_source_name_ = info->monitor_source_name;
-                ((PulseImpl *)userdata)->monitor_description_ = info->description;
+        {
+            PulseLocker locker(mainLoop);
+            auto op = pa_context_get_sink_info_list(context_, [=](pa_context *, const pa_sink_info *info, int eol,void *userdata) -> void {
+                if (eol == 0 && info->monitor_source != PA_INVALID_INDEX) {
+                    ((PulseImpl *)userdata)->monitor_source_name_ = info->monitor_source_name;
+                    ((PulseImpl *)userdata)->monitor_description_ = info->description;
+                }
+                pa_threaded_mainloop_signal(mainLoop, 0);
             }
-            pa_threaded_mainloop_signal(mainLoop, 0);
-        }
-        , this);
+            , this);
 
-        for (;PA_OPERATION_RUNNING==pa_operation_get_state(op);){
-            pa_threaded_mainloop_wait(mainLoop);
-        }
-
-        deviceInfo.monitor_source_name_ = monitor_source_name_;
-        deviceInfo.monitor_description_ = monitor_description_;
-
-        return 0;
-    }
-
-
-    ReturnType start(std::function<void(const char *, const size_t nByte)> cb) {
-        if (!wait()){
-            return "wait() failed";
+            for (;PA_OPERATION_RUNNING==pa_operation_get_state(op);){
+                pa_threaded_mainloop_wait(mainLoop);
+            }
         }
 
         {
@@ -120,16 +110,24 @@ public:
             }
         }
 
-        getSourceInfo();
+        deviceInfo.monitor_source_name_ = monitor_source_name_;
+        deviceInfo.monitor_description_ = monitor_description_;
 
+        getSourceInfo(deviceInfo.rate_, deviceInfo.channels_);
 
         if (!pa_sample_spec_valid(&spec_)) {
             return "!pa_sample_spec_valid";
         }
 
+        return 0;
+    }
+
+
+    ReturnType start(std::function<void(const char *, const size_t nByte)> cb) {
+        if (!wait()){
+            return "wait() failed";
+        }
         // auto bytes_per_frame = pa_frame_size(&spec);
-
-
 
         stream_ = pa_stream_new(context_, monitor_source_name_.c_str(), &spec_, nullptr);
         onPeekCallback_ = cb;
@@ -187,7 +185,7 @@ public:
 
 
 private:
-    ReturnType getSourceInfo(){
+    ReturnType getSourceInfo(uint32_t &rate, uint8_t &channels){
         if (!wait()) {
             return "wait() failed";
         }
@@ -222,6 +220,12 @@ private:
             pa_threaded_mainloop_wait(mainLoop);
         }
 
+        if (spec_.format!=PA_SAMPLE_S16LE){
+            return "spec_.format!=PA_SAMPLE_S16LE";
+        }
+
+        rate = spec_.rate;
+        channels=spec_.channels;
         return 0;
     }
 
