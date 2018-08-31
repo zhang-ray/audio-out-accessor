@@ -10,6 +10,8 @@
 #include <pulse/introspect.h>
 #include <pulse/thread-mainloop.h>
 
+#include "aoa/DeviceInfo.hpp"
+
 namespace {
 
 pa_threaded_mainloop *mainLoop = nullptr;
@@ -71,17 +73,16 @@ public:
     PulseImpl(const PulseImpl &) = delete;
 
 
-    ReturnType dumpDevices(){
+    ReturnType dumpDevices(DeviceInfo &deviceInfo){
         if (!wait()){
             return "wait() failed";
         }
 
         PulseLocker locker(mainLoop);
-        auto op = pa_context_get_sink_info_list(context_, [=](pa_context *, const pa_sink_info *info, int eol,void *userdata) -> void
-        {
+        auto op = pa_context_get_sink_info_list(context_, [=](pa_context *, const pa_sink_info *info, int eol,void *userdata) -> void {
             if (eol == 0 && info->monitor_source != PA_INVALID_INDEX) {
-                //printf("%s:%s\n", info->description, info->monitor_source_name);
                 ((PulseImpl *)userdata)->monitor_source_name_ = info->monitor_source_name;
+                ((PulseImpl *)userdata)->monitor_description_ = info->description;
             }
             pa_threaded_mainloop_signal(mainLoop, 0);
         }
@@ -90,6 +91,9 @@ public:
         for (;PA_OPERATION_RUNNING==pa_operation_get_state(op);){
             pa_threaded_mainloop_wait(mainLoop);
         }
+
+        deviceInfo.monitor_source_name_ = monitor_source_name_;
+        deviceInfo.monitor_description_ = monitor_description_;
 
         return 0;
     }
@@ -252,6 +256,7 @@ private:
     pa_stream *stream_ = nullptr;
     pa_sample_spec spec_;
     std::string monitor_source_name_;
+    std::string monitor_description_;
     std::string server_name_;
     std::string server_version_;
 };

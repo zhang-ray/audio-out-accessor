@@ -8,12 +8,12 @@
 
 class Pulse : public AOA, public Singleton<Pulse> {
 public:
-    ReturnType init() override {
+    ReturnType init(DeviceInfo &deviceInfo) override {
         if (pulseImpl_){
             return "isInited";
         }
         pulseImpl_.reset(new PulseImpl());
-        return pulseImpl_->dumpDevices();
+        return pulseImpl_->dumpDevices(deviceInfo);
     }
 
 

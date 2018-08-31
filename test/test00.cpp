@@ -7,7 +7,10 @@
 
 int main(void){
     auto &myAOA = Factory::get().create(Factory::Type::PULSE);
-    if (myAOA.init()){
+    DeviceInfo deviceInfo;
+    if (myAOA.init(deviceInfo)){
+        std::cout << "deviceInfo.monitor_source_name_ : "<<deviceInfo.monitor_source_name_<< std::endl;
+        std::cout << "deviceInfo.monitor_description_ : "<<deviceInfo.monitor_description_<< std::endl;
         if(true){
             for (int i = 0; i < 3; i++){
                 if (myAOA.start()){
