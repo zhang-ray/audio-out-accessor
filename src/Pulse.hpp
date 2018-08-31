@@ -17,8 +17,8 @@ public:
     }
 
 
-    ReturnType start() override {
-        return pulseImpl_->start();
+    ReturnType start(std::function<void(const char *, const size_t nByte)> cb) override {
+        return pulseImpl_->start(cb);
 
     }
 

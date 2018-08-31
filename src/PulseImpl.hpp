@@ -1,21 +1,17 @@
 #pragma once
 
 #include "aoa/ReturnType.hpp"
-
-#include <fstream>
-#include <memory>
+#include "aoa/DeviceInfo.hpp"
 
 #include <pulse/stream.h>
 #include <pulse/context.h>
 #include <pulse/introspect.h>
 #include <pulse/thread-mainloop.h>
 
-#include "aoa/DeviceInfo.hpp"
 
 namespace {
 
 pa_threaded_mainloop *mainLoop = nullptr;
-std::shared_ptr<std::ofstream> pFileDumper = nullptr;
 
 
 class PulseLocker{
@@ -99,7 +95,7 @@ public:
     }
 
 
-    ReturnType start() {
+    ReturnType start(std::function<void(const char *, const size_t nByte)> cb) {
         if (!wait()){
             return "wait() failed";
         }
@@ -136,6 +132,7 @@ public:
 
 
         stream_ = pa_stream_new(context_, monitor_source_name_.c_str(), &spec_, nullptr);
+        onPeekCallback_ = cb;
 
         {
             PulseLocker locker(mainLoop);
@@ -148,11 +145,8 @@ public:
 
                     // check if we got data
                     if (nbytes && data) {
-                        //printf("%u\n",nbytes);
-                        if (pFileDumper) {
-                            auto myBuffer = (const char *)data;
-                            pFileDumper->write(myBuffer, nbytes);
-                        }
+                        auto myBuffer = (const char *)data;
+                        pulseImpl->onPeekCallback_(myBuffer, nbytes);
                     }
                     pa_stream_drop(pulseImpl->stream_);
                 }
@@ -174,10 +168,6 @@ public:
                 return "Unable to connect to stream";
             }
         }
-
-        // for debug
-        static int counter = 0;
-        pFileDumper.reset(new std::ofstream(std::string(std::to_string(counter++)+".pcm").c_str()));
 
         return 0;
     }
@@ -259,6 +249,8 @@ private:
     std::string monitor_description_;
     std::string server_name_;
     std::string server_version_;
+
+    std::function<void(const char *, const size_t nByte)> onPeekCallback_ = nullptr;
 };
 
 
