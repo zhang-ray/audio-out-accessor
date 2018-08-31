@@ -1,13 +1,13 @@
 image: ubuntu
 
 init:
-- sudo apt -y install libpulse-dev pulseaudio-utils
+- sudo apt -y install libpulse-dev # pulseaudio-utils
 
 
 build_script:
 - ./scripts/ubuntu.build.sh
 
-test_script:
-- pwd
-- pactl list # Dump all currently loaded modules, available sinks, sources, streams, etc. 
+#test_script:
+#- pwd
+#- pactl list # Dump all currently loaded modules, available sinks, sources, streams, etc. 
 # - ../build/tests/test00 
