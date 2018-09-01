@@ -3,11 +3,16 @@ image: ubuntu
 init:
 - sudo apt -y install libpulse-dev # pulseaudio-utils
 - sudo apt -y install libsdl2-dev # for examples
+- sudo apt -y install imagemagick # for creating icon file of AppImage
 
 build_script:
 - ./scripts/ubuntu.build.sh
+- ./scripts/ubuntu.make.appimage.sh
 
 #test_script:
 #- pwd
 #- pactl list # Dump all currently loaded modules, available sinks, sources, streams, etc. 
 # - ../build/tests/test00 
+
+artifacts:
+- path: ./oscilloscope-x86_64.AppImage 
