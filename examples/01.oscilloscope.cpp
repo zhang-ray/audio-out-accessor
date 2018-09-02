@@ -47,11 +47,11 @@ int main(void){
                     SDL_RenderClear(renderer);
                     SDL_SetRenderDrawColor(renderer, 0x22, 0x77, 0x00, 0x33);
 
-                    auto mapper = [=](std::array<float, 2> in) -> std::array<int, 2> {
-                        return {(width/nSample)*in[0], in[1]*height/2/maxAudioValue+height/2 };
+                    auto mapper = [=](std::array<double, 2> in) -> std::array<double, 2> {
+                        return {in[0] * width/nSample, in[1]*height/2/maxAudioValue+height/2 };
                     };
-                    auto mapperWrapper = [=](int i) -> std::array<float, 2>{
-                        return {i, (myBuffer[i*deviceInfo.channels_*S16LE_SIZE+1]*256+myBuffer[deviceInfo.channels_*S16LE_SIZE]) };
+                    auto mapperWrapper = [=](int i) -> std::array<double, 2> {
+                        return {(double)i, (double)(myBuffer[i*deviceInfo.channels_*S16LE_SIZE+1]*256+myBuffer[deviceInfo.channels_*S16LE_SIZE])};
                     };
 
                     for (int i = 0; i < nSample-1; i++){
