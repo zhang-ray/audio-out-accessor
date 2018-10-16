@@ -1,6 +1,7 @@
 image: ubuntu
 
 init:
+- sudo apt update
 - sudo apt -y install libpulse-dev # pulseaudio-utils
 - sudo apt -y install libsdl2-dev # for examples
 - sudo apt -y install imagemagick # for creating icon file of AppImage
